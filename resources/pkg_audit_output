@@ -1,0 +1,37 @@
+vulnxml file up-to-date
+curl-7.77.0 is vulnerable:
+  cURL -- Multiple vulnerabilities
+  CVE: CVE-2021-22926
+  CVE: CVE-2021-22925
+  CVE: CVE-2021-22924
+  CVE: CVE-2021-22923
+  CVE: CVE-2021-22922
+  WWW: https://vuxml.FreeBSD.org/freebsd/aa646c01-ea0d-11eb-9b84-d4c9ef517024.html
+
+postgresql13-server-13.3_1 is vulnerable:
+  PostgreSQL server -- Memory disclosure in certain queries
+  CVE: CVE-2021-3677
+  WWW: https://vuxml.FreeBSD.org/freebsd/b471130b-fb86-11eb-87db-6cc21735f730.html
+
+go-1.16.5,1 is vulnerable:
+  go -- crypto/tls: clients can panic when provided a certificate of the wrong type for the negotiated parameters
+  CVE: CVE-2021-34558
+  WWW: https://vuxml.FreeBSD.org/freebsd/c365536d-e3cf-11eb-9d8d-b37b683944c2.html
+
+  go -- net/http: panic due to racy read of persistConn after handler panic
+  CVE: CVE-2021-36221
+  WWW: https://vuxml.FreeBSD.org/freebsd/880552c4-f63f-11eb-9d56-7186043316e9.html
+
+redis-6.0.14 is vulnerable:
+  redis -- Integer overflow issues with BITFIELD command on 32-bit systems
+  CVE: CVE-2021-32761
+  WWW: https://vuxml.FreeBSD.org/freebsd/c561ce49-eabc-11eb-9c3f-0800270512f4.html
+
+ruby-2.7.3_2,1 is vulnerable:
+  Ruby -- multiple vulnerabilities
+  CVE: CVE-2021-32066
+  CVE: CVE-2021-31810
+  CVE: CVE-2021-31799
+  WWW: https://vuxml.FreeBSD.org/freebsd/7ed5779c-e4c7-11eb-91d7-08002728f74c.html
+
+6 problem(s) in 5 installed package(s) found.
