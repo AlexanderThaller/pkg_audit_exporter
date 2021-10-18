@@ -28,7 +28,7 @@ impl Parser {
 
                 match split.as_slice() {
                     [package, "is", "vulnerable:"] => {
-                        let package = package.parse().unwrap();
+                        let package = package.parse().map_err(Error::Package)?;
 
                         Ok(Some(Audit { package }))
                     }
