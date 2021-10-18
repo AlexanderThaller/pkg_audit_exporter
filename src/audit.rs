@@ -1,6 +1,8 @@
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct Audit {
-    pub package: package::Package,
+    pub installed_packages: i64,
+    pub problems_found: i64,
+    pub vulnerable_packages: Vec<package::Package>,
 }
 
 pub mod package {
