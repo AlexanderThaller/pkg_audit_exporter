@@ -49,6 +49,8 @@ impl Metrics {
     }
 
     pub fn update(&self) -> Result<(), Error> {
+        // TODO: Instead of always fetching the pkgs just fetch every
+        // 30 minutes or so
         let output = Command::new("pkg")
             .arg("audit")
             .arg("-F")
