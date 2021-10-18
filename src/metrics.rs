@@ -15,18 +15,18 @@ pub enum Error {}
 
 #[derive(Debug)]
 pub struct Metrics {
-    installed_packages: IntGauge,
+    vulnerable_packages_total: IntGauge,
     problems_found: IntGauge,
     vulnerable_packages: IntGaugeVec,
 }
 
 impl Metrics {
     pub fn new() -> Self {
-        let installed_packages = register_int_gauge!(
-            "pkg_audit_exporter_installed_packages",
+        let vulnerable_packages_total = register_int_gauge!(
+            "pkg_audit_exporter_vulnerable_packages_total",
             "how many packages are installed"
         )
-        .expect("can not register installed_packages");
+        .expect("can not register vulnerable_packages_total");
 
         let problems_found = register_int_gauge!(
             "pkg_audit_exporter_problems_found",
@@ -42,7 +42,7 @@ impl Metrics {
         .expect("can not register vulnerable_packages");
 
         Self {
-            installed_packages,
+            vulnerable_packages_total,
             problems_found,
             vulnerable_packages,
         }
@@ -58,7 +58,7 @@ impl Metrics {
 
         let audit = Parser::parse(&output).unwrap();
 
-        self.installed_packages.set(audit.installed_packages);
+        self.vulnerable_packages_total.set(audit.installed_packages);
         self.problems_found.set(audit.problems_found);
 
         self.vulnerable_packages.reset();
