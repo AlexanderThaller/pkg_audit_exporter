@@ -24,6 +24,7 @@ use crate::parser::Parser;
 #[derive(Debug, Error)]
 pub enum Error {}
 
+// TODO: Add metric for total amount of packages installed
 #[derive(Debug)]
 pub struct Metrics {
     rng: ThreadRng,
@@ -81,8 +82,6 @@ impl Metrics {
 
             self.last_fetch = Some(Instant::now());
 
-            // TODO: Instead of always fetching the pkgs just fetch every
-            // 30 minutes or so
             Command::new("pkg")
                 .arg("audit")
                 .arg("-F")
