@@ -71,7 +71,7 @@ impl Metrics {
             let minutes_30 = Duration::new(30 * 60, 0);
             let max_since = jitter + minutes_30;
 
-            Instant::now().duration_since(last_fetch) > max_since
+            max_since < Instant::now().duration_since(last_fetch)
         } else {
             true
         };
