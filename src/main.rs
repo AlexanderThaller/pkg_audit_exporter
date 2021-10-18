@@ -29,7 +29,7 @@ fn main() -> Result<(), Error> {
 
     let exporter = prometheus_exporter::start(binding).map_err(Error::ExporterStart)?;
 
-    let metrics = Metrics::new();
+    let mut metrics = Metrics::new();
 
     loop {
         let guard = exporter.wait_request();

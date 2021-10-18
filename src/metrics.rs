@@ -1,10 +1,21 @@
-use std::process::Command;
+use std::{
+    process::Command,
+    time::{
+        Duration,
+        Instant,
+    },
+};
 
+use log::info;
 use prometheus_exporter::prometheus::{
     register_int_gauge,
     register_int_gauge_vec,
     IntGauge,
     IntGaugeVec,
+};
+use rand::{
+    prelude::ThreadRng,
+    Rng,
 };
 use thiserror::Error;
 
@@ -15,6 +26,9 @@ pub enum Error {}
 
 #[derive(Debug)]
 pub struct Metrics {
+    rng: ThreadRng,
+    last_fetch: Option<std::time::Instant>,
+
     vulnerable_packages_total: IntGauge,
     problems_found: IntGauge,
     vulnerable_packages: IntGaugeVec,
@@ -42,21 +56,46 @@ impl Metrics {
         .expect("can not register vulnerable_packages");
 
         Self {
+            rng: rand::thread_rng(),
+            last_fetch: None,
+
             vulnerable_packages_total,
             problems_found,
             vulnerable_packages,
         }
     }
 
-    pub fn update(&self) -> Result<(), Error> {
-        // TODO: Instead of always fetching the pkgs just fetch every
-        // 30 minutes or so
-        let output = Command::new("pkg")
-            .arg("audit")
-            .arg("-F")
-            .output()
-            .expect("failed to execute pkg audit")
-            .stdout;
+    pub fn update(&mut self) -> Result<(), Error> {
+        let fetch = if let Some(last_fetch) = self.last_fetch {
+            let jitter = Duration::new(self.rng.gen_range(0..100), 0);
+            let minutes_30 = Duration::new(30 * 60, 0);
+            let max_since = jitter + minutes_30;
+
+            Instant::now().duration_since(last_fetch) > max_since
+        } else {
+            true
+        };
+
+        let output = if fetch {
+            info!("Fetching new audit database");
+
+            self.last_fetch = Some(Instant::now());
+
+            // TODO: Instead of always fetching the pkgs just fetch every
+            // 30 minutes or so
+            Command::new("pkg")
+                .arg("audit")
+                .arg("-F")
+                .output()
+                .expect("failed to execute pkg audit")
+                .stdout
+        } else {
+            Command::new("pkg")
+                .arg("audit")
+                .output()
+                .expect("failed to execute pkg audit")
+                .stdout
+        };
 
         let audit = Parser::parse(&output).unwrap();
 
