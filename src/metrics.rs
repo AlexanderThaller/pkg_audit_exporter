@@ -42,6 +42,7 @@ pub struct MetricExporter {
 
 #[derive(Debug)]
 pub struct Metrics {
+    packages_installed: IntGauge,
     vulnerable_packages_total: IntGauge,
     problems_found: IntGauge,
     vulnerable_packages: IntGaugeVec,
@@ -51,6 +52,12 @@ pub struct Metrics {
 
 impl MetricExporter {
     pub fn new() -> Self {
+        let packages_installed = register_int_gauge!(
+            "pkg_audit_exporter_packages_installed",
+            "how many packages are installed"
+        )
+        .expect("can not register packages_installed");
+
         let vulnerable_packages_total = register_int_gauge!(
             "pkg_audit_exporter_vulnerable_packages_total",
             "how many packages are installed"
@@ -85,6 +92,7 @@ impl MetricExporter {
         .expect("can not register vulnerable_packages");
 
         let metrics = Metrics {
+            packages_installed,
             vulnerable_packages_total,
             problems_found,
             vulnerable_packages,
@@ -110,7 +118,7 @@ impl MetricExporter {
             true
         };
 
-        let output = if fetch {
+        let output_audit = if fetch {
             info!("Fetching new audit database");
 
             self.last_fetch = Some(Instant::now());
@@ -134,7 +142,7 @@ impl MetricExporter {
         };
 
         let pkg_audit: PkgAudit =
-            serde_json::from_slice(&output).map_err(Error::DeserializePkgAudit)?;
+            serde_json::from_slice(&output_audit).map_err(Error::DeserializePkgAudit)?;
 
         self.metrics.update(pkg_audit)?;
 
@@ -144,6 +152,22 @@ impl MetricExporter {
 
 impl Metrics {
     fn update(&self, pkg_audit: PkgAudit) -> Result<(), Error> {
+        let packages_installed = {
+            let output = Command::new("pkg")
+                .arg("info")
+                .output()
+                .expect("failed to execute pkg info")
+                .stdout;
+
+            String::from_utf8_lossy(&output)
+                .lines()
+                .count()
+                .try_into()
+                .expect("can convert lines count for packages ")
+        };
+
+        self.packages_installed.set(packages_installed);
+
         self.vulnerable_packages_total.set(pkg_audit.pkg_count);
         let packages = pkg_audit.packages.unwrap_or_default();
 
