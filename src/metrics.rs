@@ -23,7 +23,13 @@ use thiserror::Error;
 use crate::pkg_audit::PkgAudit;
 
 #[derive(Debug, Error)]
-pub enum Error {}
+pub enum Error {
+    #[error("can not deserialize pkg audit output: {0}")]
+    DeserializePkgAudit(serde_json::Error),
+
+    #[error("can not convert reverse depency length: {0}")]
+    ConvertReverseDependenciesLenght(std::num::TryFromIntError),
+}
 
 // TODO: Add metric for total amount of packages installed
 #[derive(Debug)]
@@ -127,16 +133,17 @@ impl MetricExporter {
                 .stdout
         };
 
-        let pkg_audit: PkgAudit = serde_json::from_slice(&output).unwrap();
+        let pkg_audit: PkgAudit =
+            serde_json::from_slice(&output).map_err(Error::DeserializePkgAudit)?;
 
-        self.metrics.update(pkg_audit);
+        self.metrics.update(pkg_audit)?;
 
         Ok(())
     }
 }
 
 impl Metrics {
-    fn update(&self, pkg_audit: PkgAudit) {
+    fn update(&self, pkg_audit: PkgAudit) -> Result<(), Error> {
         self.vulnerable_packages_total.set(pkg_audit.pkg_count);
 
         let problems_found = pkg_audit
@@ -156,9 +163,13 @@ impl Metrics {
                 .with_label_values(&[&name, &package.version])
                 .set(package.issue_count);
 
-            self.dependent_packages
-                .with_label_values(&[&name])
-                .set(package.reverse_dependencies.len().try_into().unwrap());
+            self.dependent_packages.with_label_values(&[&name]).set(
+                package
+                    .reverse_dependencies
+                    .len()
+                    .try_into()
+                    .map_err(Error::ConvertReverseDependenciesLenght)?,
+            );
 
             for package in package.reverse_dependencies {
                 self.vulnerable_reverse_packages
@@ -166,5 +177,7 @@ impl Metrics {
                     .inc();
             }
         }
+
+        Ok(())
     }
 }

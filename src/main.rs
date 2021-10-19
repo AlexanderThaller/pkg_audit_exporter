@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![warn(clippy::pedantic)]
+#![warn(clippy::unwrap_used)]
+#![warn(rust_2018_idioms, unused_lifetimes, missing_debug_implementations)]
+
 use thiserror::Error;
 
 mod metrics;
@@ -10,8 +15,11 @@ enum Error {
     #[error("can not parse binding from args: {0}")]
     ParseSocketAddr(std::net::AddrParseError),
 
-    #[error("can not start exporter")]
+    #[error("can not start exporter: {0}")]
     ExporterStart(prometheus_exporter::Error),
+
+    #[error("can not update metrics: {0}")]
+    UpdateMetrics(metrics::Error),
 }
 
 fn main() -> Result<(), Error> {
@@ -33,7 +41,7 @@ fn main() -> Result<(), Error> {
     loop {
         let guard = exporter.wait_request();
 
-        metrics.update().unwrap();
+        metrics.update().map_err(Error::UpdateMetrics)?;
 
         drop(guard);
     }
