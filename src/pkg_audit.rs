@@ -7,7 +7,7 @@ use std::collections::HashMap as Map;
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PkgAudit {
     pub pkg_count: i64,
-    pub packages: Map<String, Package>,
+    pub packages: Option<Map<String, Package>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -46,5 +46,14 @@ mod test {
         let got: super::PkgAudit = serde_json::from_slice(INPUT).unwrap();
 
         assert_eq!(got.pkg_count, 15);
+    }
+
+    #[test]
+    fn parse_example3() {
+        const INPUT: &[u8] = include_bytes!("../resources/example3.json");
+
+        let got: super::PkgAudit = serde_json::from_slice(INPUT).unwrap();
+
+        assert_eq!(got.pkg_count, 0);
     }
 }

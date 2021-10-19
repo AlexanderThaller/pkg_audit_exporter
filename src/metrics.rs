@@ -145,9 +145,9 @@ impl MetricExporter {
 impl Metrics {
     fn update(&self, pkg_audit: PkgAudit) -> Result<(), Error> {
         self.vulnerable_packages_total.set(pkg_audit.pkg_count);
+        let packages = pkg_audit.packages.unwrap_or_default();
 
-        let problems_found = pkg_audit
-            .packages
+        let problems_found = packages
             .values()
             .map(|package| package.issue_count + package.reverse_dependencies.len() as i64)
             .sum();
@@ -158,7 +158,7 @@ impl Metrics {
         self.dependent_packages.reset();
         self.vulnerable_reverse_packages.reset();
 
-        for (name, package) in pkg_audit.packages {
+        for (name, package) in packages {
             self.vulnerable_packages
                 .with_label_values(&[&name, &package.version])
                 .set(package.issue_count);
