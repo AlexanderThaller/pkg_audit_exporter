@@ -1,4 +1,5 @@
 use std::{
+    convert::TryInto,
     process::Command,
     time::{
         Duration,
@@ -19,23 +20,30 @@ use rand::{
 };
 use thiserror::Error;
 
-use crate::parser::Parser;
+use crate::pkg_audit::PkgAudit;
 
 #[derive(Debug, Error)]
 pub enum Error {}
 
 // TODO: Add metric for total amount of packages installed
 #[derive(Debug)]
-pub struct Metrics {
+pub struct MetricExporter {
     rng: ThreadRng,
     last_fetch: Option<std::time::Instant>,
 
+    metrics: Metrics,
+}
+
+#[derive(Debug)]
+pub struct Metrics {
     vulnerable_packages_total: IntGauge,
     problems_found: IntGauge,
     vulnerable_packages: IntGaugeVec,
+    vulnerable_reverse_packages: IntGaugeVec,
+    dependent_packages: IntGaugeVec,
 }
 
-impl Metrics {
+impl MetricExporter {
     pub fn new() -> Self {
         let vulnerable_packages_total = register_int_gauge!(
             "pkg_audit_exporter_vulnerable_packages_total",
@@ -56,13 +64,32 @@ impl Metrics {
         )
         .expect("can not register vulnerable_packages");
 
-        Self {
-            rng: rand::thread_rng(),
-            last_fetch: None,
+        let vulnerable_reverse_packages = register_int_gauge_vec!(
+            "pkg_audit_exporter_vulnerable_reverse_packages",
+            "which packages are depending on vunerable packages",
+            &["name"]
+        )
+        .expect("can not register vulnerable_packages");
 
+        let dependent_packages = register_int_gauge_vec!(
+            "pkg_audit_exporter_dependent_packages",
+            "how many packages are depending on this vunerable package",
+            &["name"]
+        )
+        .expect("can not register vulnerable_packages");
+
+        let metrics = Metrics {
             vulnerable_packages_total,
             problems_found,
             vulnerable_packages,
+            vulnerable_reverse_packages,
+            dependent_packages,
+        };
+
+        Self {
+            rng: rand::thread_rng(),
+            last_fetch: None,
+            metrics,
         }
     }
 
@@ -85,31 +112,59 @@ impl Metrics {
             Command::new("pkg")
                 .arg("audit")
                 .arg("-F")
+                .arg("-q")
+                .arg("--raw=json-compact")
                 .output()
                 .expect("failed to execute pkg audit")
                 .stdout
         } else {
             Command::new("pkg")
                 .arg("audit")
+                .arg("-q")
+                .arg("--raw=json-compact")
                 .output()
                 .expect("failed to execute pkg audit")
                 .stdout
         };
 
-        let audit = Parser::parse(&output).unwrap();
+        let pkg_audit: PkgAudit = serde_json::from_slice(&output).unwrap();
 
-        self.vulnerable_packages_total.set(audit.installed_packages);
-        self.problems_found.set(audit.problems_found);
-
-        self.vulnerable_packages.reset();
-        for package in audit.vulnerable_packages {
-            // TODO: Instead of setting 1 the exporter should count
-            // the amount of vunerabilities found and set that
-            self.vulnerable_packages
-                .with_label_values(&[&package.name, &package.version])
-                .set(1);
-        }
+        self.metrics.update(pkg_audit);
 
         Ok(())
+    }
+}
+
+impl Metrics {
+    fn update(&self, pkg_audit: PkgAudit) {
+        self.vulnerable_packages_total.set(pkg_audit.pkg_count);
+
+        let problems_found = pkg_audit
+            .packages
+            .values()
+            .map(|package| package.issue_count + package.reverse_dependencies.len() as i64)
+            .sum();
+
+        self.problems_found.set(problems_found);
+
+        self.vulnerable_packages.reset();
+        self.dependent_packages.reset();
+        self.vulnerable_reverse_packages.reset();
+
+        for (name, package) in pkg_audit.packages {
+            self.vulnerable_packages
+                .with_label_values(&[&name, &package.version])
+                .set(package.issue_count);
+
+            self.dependent_packages
+                .with_label_values(&[&name])
+                .set(package.reverse_dependencies.len().try_into().unwrap());
+
+            for package in package.reverse_dependencies {
+                self.vulnerable_reverse_packages
+                    .with_label_values(&[&package])
+                    .inc();
+            }
+        }
     }
 }

@@ -1,0 +1,385 @@
+{
+    "pkg_count": 15,
+    "packages": {
+        "openssl": {
+            "version": "1.1.1d,1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 1.1.1l,1"
+                    ],
+                    "description": "OpenSSL -- multiple vulnerabilities",
+                    "cve": [
+                        "CVE-2021-3712",
+                        "CVE-2021-3711"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/96811d4a-04ec-11ec-9b84-d4c9ef517024.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "git",
+                "nrpe3",
+                "python37",
+                "curl",
+                "libevent",
+                "tmux",
+                "monitoring-plugins",
+                "p5-Net-SSLeay",
+                "p5-IO-Socket-SSL",
+                "percona56-client",
+                "py27-cryptography",
+                "py27-urllib3",
+                "py27-requests",
+                "py27-salt2017",
+                "py27-openssl",
+                "python27",
+                "py27-Babel",
+                "py27-Jinja2",
+                "py27-futures",
+                "py27-libcloud",
+                "py27-msgpack",
+                "py27-pyzmq",
+                "py27-raet",
+                "py27-yaml",
+                "py27-chardet",
+                "py27-pytz",
+                "py27-certifi",
+                "py27-tornado4",
+                "py27-pysocks",
+                "py27-asn1crypto",
+                "py27-cffi",
+                "py27-ipaddress",
+                "py27-six",
+                "py27-singledispatch",
+                "py27-setuptools",
+                "py27-ioflo",
+                "py27-progressbar",
+                "py27-libnacl",
+                "py27-pycrypto",
+                "py27-MarkupSafe",
+                "py27-backports_abc",
+                "py27-idna",
+                "py27-enum34",
+                "py27-pycparser",
+                "monit"
+            ]
+        },
+        "py27-yaml": {
+            "version": "5.2",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 5.3.1"
+                    ],
+                    "description": "py-yaml -- FullLoader (still) exploitable for arbitrary command execution",
+                    "cve": [
+                        "CVE-2020-1747"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/aae8fecf-888e-11ea-9714-08002718de91.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "py27-salt2017"
+            ]
+        },
+        "rsync": {
+            "version": "3.1.3_1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 3.2.0"
+                    ],
+                    "description": "net/rsync -- multiple zlib issues",
+                    "cve": [
+                        "CVE-2016-9840",
+                        "CVE-2016-9841",
+                        "CVE-2016-9842",
+                        "CVE-2016-9843"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/085399ab-dfd7-11ea-96e4-80ee73bc7b66.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        },
+        "expat": {
+            "version": "2.2.8",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 2.4.1"
+                    ],
+                    "description": "texproc/expat2 -- billion laugh attack",
+                    "cve": [
+                        "CVE-2013-0340"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/5fa90ee6-bc9e-11eb-a287-e0d55e2a8bf9.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "git"
+            ]
+        },
+        "python27": {
+            "version": "2.7.17_1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 2.7.18"
+                    ],
+                    "description": "Python -- Regular Expression DoS attack against client",
+                    "cve": [
+                        "CVE-2020-8492"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/a27b0bb6-84fc-11ea-b5b4-641c67a117d8.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "py27-Babel",
+                "py27-Jinja2",
+                "py27-futures",
+                "py27-libcloud",
+                "py27-msgpack",
+                "py27-pyzmq",
+                "py27-raet",
+                "py27-requests",
+                "py27-yaml",
+                "py27-chardet",
+                "py27-pytz",
+                "py27-urllib3",
+                "py27-certifi",
+                "py27-pysocks",
+                "py27-cryptography",
+                "py27-openssl",
+                "py27-asn1crypto",
+                "py27-cffi",
+                "py27-ipaddress",
+                "py27-six",
+                "py27-singledispatch",
+                "py27-tornado4",
+                "py27-setuptools",
+                "py27-progressbar",
+                "py27-libnacl",
+                "py27-pycrypto",
+                "py27-MarkupSafe",
+                "py27-backports_abc",
+                "py27-idna",
+                "py27-enum34",
+                "py27-pycparser"
+            ]
+        },
+        "sqlite3": {
+            "version": "3.30.1,1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 3.32.2,1"
+                    ],
+                    "description": "several security issues in sqlite3",
+                    "cve": [
+                        "CVE-2020-13632",
+                        "CVE-2020-13631",
+                        "CVE-2020-13630",
+                        "CVE-2020-13435",
+                        "CVE-2020-13434",
+                        "CVE-2020-11655"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/c4ac9c79-ab37-11ea-8b5e-b42e99a1b9c3.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        },
+        "curl": {
+            "version": "7.68.0",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        ">= 7.20.0 : < 7.71.0"
+                    ],
+                    "description": "curl -- multiple vulnerabilities",
+                    "cve": [
+                        "CVE-2020-8177",
+                        "CVE-2020-8169"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/6bff5ca6-b61a-11ea-aef4-08002728f74c.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "git"
+            ]
+        },
+        "percona56-client": {
+            "version": "5.6.45.86.1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 5.6.48"
+                    ],
+                    "description": "MySQL Client -- Multiple vulerabilities",
+                    "cve": [
+                        "CVE-2020-2933",
+                        "CVE-2020-2922",
+                        "CVE-2020-2875",
+                        "CVE-2020-2934",
+                        "CVE-2020-2752"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/622b5c47-855b-11ea-a5e2-d4c9ef517024.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "monitoring-plugins"
+            ]
+        },
+        "python37": {
+            "version": "3.7.6",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "<= 3.7.7"
+                    ],
+                    "description": "Python -- CRLF injection via the host part of the url passed to urlopen()",
+                    "cve": [
+                        "CVE-2019-18348"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/ca595a25-91d8-11ea-b470-080027846a02.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "git"
+            ]
+        },
+        "git": {
+            "version": "2.25.1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        ">= 0 : < 2.17.4",
+                        ">= 2.18.0 : < 2.18.3",
+                        ">= 2.19.0 : < 2.19.4",
+                        ">= 2.20.0 : < 2.20.3",
+                        ">= 2.21.0 : < 2.21.2",
+                        ">= 2.22.0 : < 2.22.3",
+                        ">= 2.23.0 : < 2.23.2",
+                        ">= 2.24.0 : < 2.24.2",
+                        ">= 2.25.0 : < 2.25.3",
+                        ">= 2.26.0 : < 2.26.1"
+                    ],
+                    "description": "malicious URLs may present credentials to wrong server",
+                    "cve": [
+                        "CVE-2020-5260"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/ced2d47e-8469-11ea-a283-b42e99a1b9c3.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        },
+        "libzmq4": {
+            "version": "4.3.1_1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 4.3.2"
+                    ],
+                    "description": "libzmq4 -- Stack overflow",
+                    "cve": [
+                        "CVE-2019-13132"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/6954a2b0-bda8-11eb-a04e-641c67a117d8.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "py27-pyzmq"
+            ]
+        },
+        "tmux": {
+            "version": "3.0a_1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 3.1c"
+                    ],
+                    "description": "tmux -- stack overflow in CSI parsing",
+                    "url": "https://vuxml.FreeBSD.org/freebsd/8827134c-1a8f-11eb-9bb0-08002725d892.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        },
+        "go": {
+            "version": "1.14_1,1",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 1.15.7,1"
+                    ],
+                    "description": "go -- cmd/go: packages using cgo can cause arbitrary code execution at build time; crypto/elliptic: incorrect operations on the P-224 curve",
+                    "cve": [
+                        "CVE-2021-3114",
+                        "CVE-2021-3115"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/6a4805d5-5aaf-11eb-a21d-79f5bc5ef6a9.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        },
+        "libnghttp2": {
+            "version": "1.40.0",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 1.41.0"
+                    ],
+                    "description": "nghttp2 -- DoS vulnerability",
+                    "cve": [
+                        "CVE-2020-11080"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/4bb56d2f-a5b0-11ea-a860-08002728f74c.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "curl"
+            ]
+        },
+        "sudo": {
+            "version": "1.8.31",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 1.9.5"
+                    ],
+                    "description": "sudo -- Potential information leak in sudoedit",
+                    "cve": [
+                        "CVE-2021-23239"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/6193b3f6-548c-11eb-ba01-206a8a720317.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+
+            ]
+        }
+    }
+}

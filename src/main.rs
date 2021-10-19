@@ -1,10 +1,9 @@
 use thiserror::Error;
 
-mod audit;
 mod metrics;
-mod parser;
+mod pkg_audit;
 
-use metrics::Metrics;
+use metrics::MetricExporter;
 
 #[derive(Error, Debug)]
 enum Error {
@@ -29,7 +28,7 @@ fn main() -> Result<(), Error> {
 
     let exporter = prometheus_exporter::start(binding).map_err(Error::ExporterStart)?;
 
-    let mut metrics = Metrics::new();
+    let mut metrics = MetricExporter::new();
 
     loop {
         let guard = exporter.wait_request();

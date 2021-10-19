@@ -1,0 +1,23 @@
+{
+    "pkg_count": 1,
+    "packages": {
+        "mysql80-client": {
+            "version": "8.0.26",
+            "issue_count": 1,
+            "issues": [
+                {
+                    "Affected versions": [
+                        "< 8.0.27"
+                    ],
+                    "description": "MySQL -- Multiple vulnerabilities",
+                    "url": "https://vuxml.FreeBSD.org/freebsd/c9387e4d-2f5f-11ec-8be6-d4c9ef517024.html\\n\\n"
+                }
+            ],
+            "reverse dependencies": [
+                "py38-mysqlclient",
+                "seafile-server",
+                "libzdb"
+            ]
+        }
+    }
+}
