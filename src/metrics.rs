@@ -1,5 +1,4 @@
 use std::{
-    convert::TryInto,
     process::Command,
     time::{
         Duration,
@@ -171,6 +170,7 @@ impl Metrics {
         self.vulnerable_packages_total.set(pkg_audit.pkg_count);
         let packages = pkg_audit.packages.unwrap_or_default();
 
+        #[allow(clippy::cast_possible_wrap)]
         let problems_found = packages
             .values()
             .map(|package| package.issue_count + package.reverse_dependencies.len() as i64)
