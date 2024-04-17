@@ -6,6 +6,7 @@ use std::{
     },
 };
 
+use itertools::Itertools;
 use log::info;
 use prometheus_exporter::prometheus::{
     register_int_gauge,
@@ -72,7 +73,7 @@ impl MetricExporter {
         let vulnerable_packages = register_int_gauge_vec!(
             "pkg_audit_exporter_vulnerable_packages",
             "which packages are vunerable",
-            &["name", "version"]
+            &["name", "version", "urls"]
         )
         .expect("can not register vulnerable_packages");
 
@@ -184,7 +185,11 @@ impl Metrics {
 
         for (name, package) in packages {
             self.vulnerable_packages
-                .with_label_values(&[&name, &package.version])
+                .with_label_values(&[
+                    &name,
+                    &package.version,
+                    &package.issues.iter().map(|issue| &issue.url).join(","),
+                ])
                 .set(package.issue_count);
 
             self.dependent_packages.with_label_values(&[&name]).set(
