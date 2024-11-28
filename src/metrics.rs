@@ -7,7 +7,7 @@ use std::{
 };
 
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use prometheus_exporter::prometheus::{
     register_int_gauge,
     register_int_gauge_vec,

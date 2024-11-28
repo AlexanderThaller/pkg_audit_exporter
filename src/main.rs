@@ -6,46 +6,31 @@
 #![warn(clippy::unwrap_used)]
 #![warn(rust_2018_idioms, unused_lifetimes, missing_debug_implementations)]
 
-use thiserror::Error;
+use color_eyre::eyre::{
+    Result,
+    WrapErr,
+};
 
-mod metrics;
-mod pkg_audit;
+// mod metrics;
+// mod pkg_audit;
+mod handler;
+mod telemetry;
 
-use metrics::MetricExporter;
+#[tokio::main]
+async fn main() -> Result<()> {
+    color_eyre::install().expect("failed to setup color_eyre");
 
-#[derive(Error, Debug)]
-enum Error {
-    #[error("can not parse binding from args: {0}")]
-    ParseSocketAddr(std::net::AddrParseError),
-
-    #[error("can not start exporter: {0}")]
-    ExporterStart(prometheus_exporter::Error),
-
-    #[error("can not update metrics: {0}")]
-    UpdateMetrics(metrics::Error),
-}
-
-fn main() -> Result<(), Error> {
-    if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "info");
-    }
-    pretty_env_logger::init();
+    telemetry::setup(tracing::Level::INFO, None).context("failed to setup telemetry")?;
 
     let binding = std::env::args()
         .nth(1)
         .unwrap_or_else(|| "127.0.0.1:8683".to_string())
-        .parse::<std::net::SocketAddr>()
-        .map_err(Error::ParseSocketAddr)?;
+        .parse()
+        .context("failed to parse socket address")?;
 
-    let exporter = prometheus_exporter::start(binding).map_err(Error::ExporterStart)?;
+    handler::start(binding)
+        .await
+        .context("failed to start webserver")?;
 
-    let mut metrics = MetricExporter::new();
-
-    loop {
-        let guard = exporter.wait_request();
-
-        metrics.update().map_err(Error::UpdateMetrics)?;
-
-        drop(guard);
-    }
+    Ok(())
 }
