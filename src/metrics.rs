@@ -1,209 +1,167 @@
-use std::{
-    process::Command,
-    time::{
-        Duration,
-        Instant,
+use color_eyre::eyre::{
+    Context,
+    Result,
+};
+use metrics_derive::Metrics;
+use prometheus_client::{
+    encoding::EncodeLabelSet,
+    metrics::{
+        family::Family,
+        gauge::Gauge,
     },
+    registry::Registry,
 };
+use tokio::process::Command;
 
-use itertools::Itertools;
-use tracing::info;
-use prometheus_exporter::prometheus::{
-    register_int_gauge,
-    register_int_gauge_vec,
-    IntGauge,
-    IntGaugeVec,
-};
-use rand::{
-    prelude::ThreadRng,
-    Rng,
-};
-use thiserror::Error;
-
-use crate::pkg_audit::PkgAudit;
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("can not deserialize pkg audit output: {0}")]
-    DeserializePkgAudit(serde_json::Error),
-
-    #[error("can not convert reverse depency length: {0}")]
-    ConvertReverseDependenciesLenght(std::num::TryFromIntError),
-}
+use crate::pkg_audit::Fetcher;
 
 // TODO: Add metric for total amount of packages installed
 #[derive(Debug)]
-pub struct MetricExporter {
-    rng: ThreadRng,
-    last_fetch: Option<std::time::Instant>,
-
-    metrics: Metrics,
+pub(crate) struct MetricExporter {
+    fetcher: Fetcher,
+    pub(crate) metrics: Metrics,
+    pub(crate) registry: Registry,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub(crate) struct InfoLabels {
+    pub(crate) version: String,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub(crate) struct PackageLabels {
+    pub(crate) name: String,
+    pub(crate) version: String,
+    pub(crate) urls: String,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub(crate) struct ReversePackageLabels {
+    pub(crate) name: String,
+}
+
+#[derive(Debug, Metrics)]
+#[metrics(namespace = "pkg_audit_exporter")]
 pub struct Metrics {
-    packages_installed: IntGauge,
-    vulnerable_packages_total: IntGauge,
-    problems_found: IntGauge,
-    vulnerable_packages: IntGaugeVec,
-    vulnerable_reverse_packages: IntGaugeVec,
-    dependent_packages: IntGaugeVec,
+    #[metrics(
+        name = "info",
+        help = "pkg_audit_exporter information",
+        init = InfoLabels {
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
+        set = 1
+    )]
+    #[expect(
+        dead_code,
+        reason = "this is set at the start and deserialized to prometheus metrics and never \
+                  directly read"
+    )]
+    info: Family<InfoLabels, Gauge>,
+
+    #[metrics(help = "How many packages are installed")]
+    packages_installed: Gauge,
+
+    #[metrics(help = "How many packages are vulnerable in total")]
+    vulnerable_packages_total: Gauge,
+
+    #[metrics(help = "How many problems were found")]
+    problems_found: Gauge,
+
+    #[metrics(help = "Vulnerable packages")]
+    vulnerable_packages: Family<PackageLabels, Gauge>,
+
+    #[metrics(help = "Vulnerable reverse packages")]
+    vulnerable_reverse_packages: Family<ReversePackageLabels, Gauge>,
+
+    #[metrics(help = "Vulnerable dependent packages")]
+    dependent_packages: Family<ReversePackageLabels, Gauge>,
+}
+
+impl Default for MetricExporter {
+    fn default() -> Self {
+        let mut registry = Registry::default();
+        let fetcher = Fetcher::default();
+        let metrics = Metrics::register(&mut registry);
+
+        Self {
+            fetcher,
+            metrics,
+            registry,
+        }
+    }
 }
 
 impl MetricExporter {
-    pub fn new() -> Self {
-        let packages_installed = register_int_gauge!(
-            "pkg_audit_exporter_packages_installed",
-            "how many packages are installed"
-        )
-        .expect("can not register packages_installed");
-
-        let vulnerable_packages_total = register_int_gauge!(
-            "pkg_audit_exporter_vulnerable_packages_total",
-            "how many packages are installed"
-        )
-        .expect("can not register vulnerable_packages_total");
-
-        let problems_found = register_int_gauge!(
-            "pkg_audit_exporter_problems_found",
-            "how many problems where found"
-        )
-        .expect("can not register problems_found");
-
-        let vulnerable_packages = register_int_gauge_vec!(
-            "pkg_audit_exporter_vulnerable_packages",
-            "which packages are vunerable",
-            &["name", "version", "urls"]
-        )
-        .expect("can not register vulnerable_packages");
-
-        let vulnerable_reverse_packages = register_int_gauge_vec!(
-            "pkg_audit_exporter_vulnerable_reverse_packages",
-            "which packages are depending on vunerable packages",
-            &["name"]
-        )
-        .expect("can not register vulnerable_packages");
-
-        let dependent_packages = register_int_gauge_vec!(
-            "pkg_audit_exporter_dependent_packages",
-            "how many packages are depending on this vunerable package",
-            &["name"]
-        )
-        .expect("can not register vulnerable_packages");
-
-        let metrics = Metrics {
-            packages_installed,
-            vulnerable_packages_total,
-            problems_found,
-            vulnerable_packages,
-            vulnerable_reverse_packages,
-            dependent_packages,
-        };
-
-        Self {
-            rng: rand::thread_rng(),
-            last_fetch: None,
-            metrics,
-        }
-    }
-
-    pub fn update(&mut self) -> Result<(), Error> {
-        let fetch = if let Some(last_fetch) = self.last_fetch {
-            let jitter = Duration::new(self.rng.gen_range(0..100), 0);
-            let minutes_30 = Duration::new(30 * 60, 0);
-            let max_since = jitter + minutes_30;
-
-            max_since < Instant::now().duration_since(last_fetch)
-        } else {
-            true
-        };
-
-        let output_audit = if fetch {
-            info!("Fetching new audit database");
-
-            self.last_fetch = Some(Instant::now());
-
-            Command::new("pkg")
-                .arg("audit")
-                .arg("-F")
-                .arg("-q")
-                .arg("--raw=json-compact")
-                .output()
-                .expect("failed to execute pkg audit")
-                .stdout
-        } else {
-            Command::new("pkg")
-                .arg("audit")
-                .arg("-q")
-                .arg("--raw=json-compact")
-                .output()
-                .expect("failed to execute pkg audit")
-                .stdout
-        };
-
-        let pkg_audit: PkgAudit =
-            serde_json::from_slice(&output_audit).map_err(Error::DeserializePkgAudit)?;
-
-        self.metrics.update(pkg_audit)?;
-
-        Ok(())
-    }
-}
-
-impl Metrics {
-    fn update(&self, pkg_audit: PkgAudit) -> Result<(), Error> {
+    pub(crate) async fn update(&mut self) -> Result<()> {
         let packages_installed = {
             let output = Command::new("pkg")
                 .arg("info")
                 .output()
-                .expect("failed to execute pkg info")
+                .await
+                .context("failed to execute pkg info")?
                 .stdout;
 
             String::from_utf8_lossy(&output)
                 .lines()
                 .count()
                 .try_into()
-                .expect("can convert lines count for packages ")
+                .context("can not convert lines count for packages ")?
         };
 
-        self.packages_installed.set(packages_installed);
+        self.metrics.packages_installed.set(packages_installed);
 
-        self.vulnerable_packages_total.set(pkg_audit.pkg_count);
-        let packages = pkg_audit.packages.unwrap_or_default();
+        let pkg_audit = self
+            .fetcher
+            .fetch()
+            .await
+            .context("failed to fetch pkg audit")?;
 
-        #[expect(clippy::cast_possible_wrap, reason = "upstream library expects i64")]
-        let problems_found = packages
-            .values()
-            .map(|package| package.issue_count + package.reverse_dependencies.len() as i64)
-            .sum();
+        self.metrics
+            .vulnerable_packages_total
+            .set(pkg_audit.pkg_count);
 
-        self.problems_found.set(problems_found);
+        self.metrics.vulnerable_packages.clear();
+        self.metrics.dependent_packages.clear();
+        self.metrics.vulnerable_reverse_packages.clear();
 
-        self.vulnerable_packages.reset();
-        self.dependent_packages.reset();
-        self.vulnerable_reverse_packages.reset();
+        if let Some(packages) = pkg_audit.packages {
+            let problems_found = packages
+                .values()
+                .map(|package| package.issue_count + package.reverse_dependencies.len())
+                .sum::<usize>()
+                .try_into()
+                .context("can not convert problems found to i64")?;
 
-        for (name, package) in packages {
-            self.vulnerable_packages
-                .with_label_values(&[
-                    &name,
-                    &package.version,
-                    &package.issues.iter().map(|issue| &issue.url).join(","),
-                ])
-                .set(package.issue_count);
+            self.metrics.problems_found.set(problems_found);
 
-            self.dependent_packages.with_label_values(&[&name]).set(
-                package
-                    .reverse_dependencies
-                    .len()
-                    .try_into()
-                    .map_err(Error::ConvertReverseDependenciesLenght)?,
-            );
+            for (name, package) in packages {
+                let urls = package
+                    .issues
+                    .iter()
+                    .map(|issue| issue.url.trim().to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
 
-            for package in package.reverse_dependencies {
-                self.vulnerable_reverse_packages
-                    .with_label_values(&[&package])
-                    .inc();
+                let labels = PackageLabels {
+                    name: name.clone(),
+                    version: package.version.clone(),
+                    urls,
+                };
+
+                self.metrics.vulnerable_packages.get_or_create(&labels).set(
+                    package
+                        .issue_count
+                        .try_into()
+                        .context("can not convert issue count")?,
+                );
+
+                for reverse_dependency in package.reverse_dependencies {
+                    let labels = ReversePackageLabels {
+                        name: reverse_dependency.clone(),
+                    };
+
+                    self.metrics.dependent_packages.get_or_create(&labels).inc();
+                }
             }
         }
 

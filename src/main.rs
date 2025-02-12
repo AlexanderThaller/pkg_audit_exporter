@@ -1,3 +1,4 @@
+//#![deny(missing_docs)]
 #![forbid(unsafe_code)]
 #![warn(clippy::allow_attributes)]
 #![warn(clippy::allow_attributes_without_reason)]
@@ -11,9 +12,9 @@ use color_eyre::eyre::{
     WrapErr,
 };
 
-// mod metrics;
-// mod pkg_audit;
 mod handler;
+mod metrics;
+mod pkg_audit;
 mod telemetry;
 
 #[tokio::main]

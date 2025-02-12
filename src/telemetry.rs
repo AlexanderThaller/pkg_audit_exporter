@@ -29,7 +29,7 @@ use opentelemetry_semantic_conventions::{
 };
 use tracing_opentelemetry::OpenTelemetryLayer;
 
-pub(super) fn setup(log_level: tracing::Level, sample_rate: Option<f64>) -> Result<()> {
+pub(crate) fn setup(log_level: tracing::Level, sample_rate: Option<f64>) -> Result<()> {
     Registry::default()
         .with(tracing_subscriber::EnvFilter::new(format!("{log_level}")))
         .with(tracing_subscriber::fmt::layer())
@@ -41,7 +41,7 @@ pub(super) fn setup(log_level: tracing::Level, sample_rate: Option<f64>) -> Resu
     Ok(())
 }
 
-pub(super) fn resource() -> Resource {
+pub(crate) fn resource() -> Resource {
     Resource::from_schema_url(
         [
             KeyValue::new(SERVICE_NAME, env!("CARGO_PKG_NAME")),
@@ -55,7 +55,7 @@ pub(super) fn resource() -> Resource {
     )
 }
 
-pub(super) fn init_tracer(
+pub(crate) fn init_tracer(
     sample_rate: Option<f64>,
 ) -> Result<Tracer, opentelemetry::trace::TraceError> {
     let sample_rate = sample_rate.unwrap_or(1.0);

@@ -1,20 +1,20 @@
 [package]
 edition = "2021"
 name = "pkg_audit_exporter"
-version = "0.1.1"
+version = "0.2.0"
 
 [dependencies]
-axum-macros = "0.4"
-axum = { version = "0.7", features = ["json", "macros", "tracing"] }
+axum-macros = "0.5"
+axum = { version = "0.8", features = ["json", "macros", "tracing"] }
 color-eyre = "0.6"
-itertools = "0.13"
+itertools = "0.14"
 metrics-derive = { git = "https://github.com/AlexanderThaller/metrics-derive.git" }
-prometheus-client = "0.22"
-rand = "0.8"
+prometheus-client = "0.23"
+rand = "0.9"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full", "tracing"] }
-tower-http = { version = "0.5", features = ["compression-full"] }
+tower-http = { version = "0.6", features = ["compression-full"] }
 
 opentelemetry-otlp = { version = "0.16" }
 opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
@@ -26,3 +26,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 pretty_assertions = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
