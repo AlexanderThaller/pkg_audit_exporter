@@ -2,6 +2,7 @@ use color_eyre::eyre::{
     Context,
     Result,
 };
+use itertools::Itertools;
 use metrics_derive::Metrics;
 use prometheus_client::{
     encoding::EncodeLabelSet,
@@ -135,32 +136,39 @@ impl MetricExporter {
             self.metrics.problems_found.set(problems_found);
 
             for (name, package) in packages {
-                let urls = package
-                    .issues
-                    .iter()
-                    .map(|issue| issue.url.trim().to_string())
-                    .collect::<Vec<String>>()
-                    .join(", ");
-
                 let labels = PackageLabels {
                     name: name.clone(),
-                    version: package.version.clone(),
-                    urls,
+                    version: package.version,
+                    urls: package
+                        .issues
+                        .iter()
+                        .map(|issue| issue.url.trim().to_string())
+                        .join(","),
                 };
 
                 self.metrics.vulnerable_packages.get_or_create(&labels).set(
                     package
                         .issue_count
                         .try_into()
-                        .context("can not convert issue count")?,
+                        .context("can not convert issue count to i64")?,
                 );
 
-                for reverse_dependency in package.reverse_dependencies {
-                    let labels = ReversePackageLabels {
-                        name: reverse_dependency.clone(),
-                    };
+                self.metrics
+                    .dependent_packages
+                    .get_or_create(&ReversePackageLabels { name })
+                    .set(
+                        package
+                            .reverse_dependencies
+                            .len()
+                            .try_into()
+                            .context("can not convert reverse dependencies to i64")?,
+                    );
 
-                    self.metrics.dependent_packages.get_or_create(&labels).inc();
+                for package in package.reverse_dependencies {
+                    self.metrics
+                        .vulnerable_reverse_packages
+                        .get_or_create(&{ ReversePackageLabels { name: package } })
+                        .inc();
                 }
             }
         }
