@@ -16,6 +16,7 @@ serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full", "tracing"] }
 tower-http = { version = "0.6", features = ["compression-full"] }
 
+hostname = "0.4"
 opentelemetry-otlp = { version = "0.16" }
 opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
 opentelemetry-semantic-conventions = { version = "0.15" }
