@@ -46,6 +46,7 @@ pub(crate) fn resource() -> Resource {
         [
             KeyValue::new(SERVICE_NAME, env!("CARGO_PKG_NAME")),
             KeyValue::new(SERVICE_VERSION, env!("CARGO_PKG_VERSION")),
+            KeyValue::new("service.instance.id", std::env::var("HOSTNAME").unwrap_or_default()),
             #[cfg(debug_assertions)]
             KeyValue::new(DEPLOYMENT_ENVIRONMENT, "develop"),
             #[cfg(not(debug_assertions))]
