@@ -6,14 +6,14 @@ use std::collections::HashMap as Map;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PkgAudit {
-    pub pkg_count: i64,
+    pub pkg_count: u32,
     pub packages: Option<Map<String, Package>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Package {
     pub version: String,
-    pub issue_count: i64,
+    pub issue_count: u32,
     pub issues: Vec<Issue>,
 
     #[serde(rename = "reverse dependencies")]
