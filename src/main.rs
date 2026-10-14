@@ -26,10 +26,9 @@ enum Error {
 }
 
 fn main() -> Result<(), Error> {
-    if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "info");
-    }
-    pretty_env_logger::init();
+    pretty_env_logger::formatted_builder()
+        .parse_filters(&std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string()))
+        .init();
 
     let binding = std::env::args()
         .nth(1)

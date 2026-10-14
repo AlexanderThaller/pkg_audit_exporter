@@ -9,14 +9,14 @@ use std::{
 use itertools::Itertools;
 use log::info;
 use prometheus_exporter::prometheus::{
-    register_int_gauge,
-    register_int_gauge_vec,
     IntGauge,
     IntGaugeVec,
+    register_int_gauge,
+    register_int_gauge_vec,
 };
 use rand::{
-    prelude::ThreadRng,
-    Rng,
+    RngExt,
+    rngs::ThreadRng,
 };
 use thiserror::Error;
 
@@ -101,7 +101,7 @@ impl MetricExporter {
         };
 
         Self {
-            rng: rand::thread_rng(),
+            rng: rand::rng(),
             last_fetch: None,
             metrics,
         }
@@ -109,7 +109,7 @@ impl MetricExporter {
 
     pub fn update(&mut self) -> Result<(), Error> {
         let fetch = if let Some(last_fetch) = self.last_fetch {
-            let jitter = Duration::new(self.rng.gen_range(0..100), 0);
+            let jitter = Duration::new(self.rng.random_range(0..100), 0);
             let minutes_30 = Duration::new(30 * 60, 0);
             let max_since = jitter + minutes_30;
 
